@@ -1,8 +1,12 @@
 import { z } from "zod";
+import { resolveProviderName } from "@site-ia/ai";
 
 /** Variables d'environnement validées au démarrage. Toutes facultatives en dev (mode mock). */
 const EnvSchema = z.object({
   ANTHROPIC_API_KEY: z.string().optional(),
+  /** "claude-cli" = abonnement Claude via Claude Code (dev local uniquement). */
+  AI_PROVIDER: z.enum(["anthropic", "claude-cli", "mock"]).optional(),
+  CLAUDE_CLI_PATH: z.string().optional(),
   DATABASE_URL: z.string().optional(),
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
@@ -16,4 +20,4 @@ const EnvSchema = z.object({
 
 export const env = EnvSchema.parse(process.env);
 
-export const isMockAi = !env.ANTHROPIC_API_KEY;
+export const aiProviderName = resolveProviderName(process.env);

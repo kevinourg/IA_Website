@@ -27,6 +27,17 @@ pnpm dev           # http://localhost:3000
 
 État des services : `GET /api/health`.
 
+### Tester avec ton abonnement Claude (sans clé API)
+
+Pour du **développement local uniquement** (interdit en production par les conditions d'Anthropic) :
+
+1. Installe [Claude Code](https://code.claude.com) et connecte-toi : lance `claude`, puis `/login` avec ton compte Claude.
+2. Dans `apps/web/.env.local`, ajoute `AI_PROVIDER=claude-cli`.
+3. Relance `pnpm dev` : `/api/health` doit afficher `"ai":"claude-cli"`.
+
+Les appels consomment le quota de ton abonnement. Sous Windows, si `claude` est introuvable,
+renseigne `CLAUDE_CLI_PATH` avec le chemin complet de `claude.exe`.
+
 ### Parcours à tester
 
 1. `http://localhost:3000` → décrire son activité → **Générer l'aperçu**

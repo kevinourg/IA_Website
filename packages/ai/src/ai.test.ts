@@ -9,6 +9,7 @@ import {
   generateSite,
   intakeTurn,
   modelFor,
+  resolveProviderName,
   toInputSchema,
 } from "./index";
 
@@ -70,5 +71,20 @@ describe("applyPatch", () => {
 describe("schéma d'outil", () => {
   it("produit un JSON Schema objet", () => {
     expect(toInputSchema(SiteSpecSchema).type).toBe("object");
+  });
+});
+
+describe("choix du fournisseur", () => {
+  it("simulation par défaut, API si clé, abonnement si demandé", () => {
+    expect(resolveProviderName({})).toBe("mock");
+    expect(resolveProviderName({ ANTHROPIC_API_KEY: "k" })).toBe("anthropic");
+    expect(resolveProviderName({ AI_PROVIDER: "claude-cli", ANTHROPIC_API_KEY: "k" })).toBe(
+      "claude-cli",
+    );
+  });
+  it("refuse l'abonnement en production", () => {
+    expect(() =>
+      resolveProviderName({ AI_PROVIDER: "claude-cli", NODE_ENV: "production" }),
+    ).toThrow();
   });
 });
