@@ -1,0 +1,25 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["NODE_ENV"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": [
+        "ANTHROPIC_API_KEY",
+        "AI_MODEL_*",
+        "DATABASE_URL",
+        "STRIPE_*",
+        "NEXT_PUBLIC_*",
+        "ROOT_DOMAIN"
+      ]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {},
+    "typecheck": {},
+    "test": {}
+  }
+}

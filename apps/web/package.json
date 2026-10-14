@@ -1,0 +1,37 @@
+{
+  "name": "@site-ia/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@site-ia/ai": "workspace:*",
+    "@site-ia/core": "workspace:*",
+    "@site-ia/db": "workspace:*",
+    "@site-ia/renderer": "workspace:*",
+    "next": "^16.4.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "server-only": "^0.0.1",
+    "stripe": "^23.0.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "^16.4.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.4"
+  }
+}

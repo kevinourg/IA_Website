@@ -1,0 +1,27 @@
+{
+  "name": "site-ia",
+  "private": true,
+  "description": "Plateforme de vente de sites vitrines conçus par IA pour artisans, commerçants et TPE",
+  "packageManager": "pnpm@10.15.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "turbo run dev --filter=@site-ia/web",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "pnpm --filter @site-ia/db generate",
+    "db:migrate": "pnpm --filter @site-ia/db migrate",
+    "db:studio": "pnpm --filter @site-ia/db studio",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.10",
+    "turbo": "^2.11.8",
+    "typescript": "~5.9.3"
+  }
+}
