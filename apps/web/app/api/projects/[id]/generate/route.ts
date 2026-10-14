@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { generateSite } from "@site-ia/ai";
 import { BusinessBriefSchema, missingBriefFields, slugify } from "@site-ia/core";
 import { env } from "@/lib/env";
+import { aiErrorMessage } from "@/lib/errors";
 import { ai, repo, trackUsage } from "@/lib/services";
 
 // La génération complète peut prendre jusqu'à ~1 min avec le modèle "balanced".
@@ -44,6 +45,9 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   } catch (err) {
     console.error("[generate]", err);
     await repo().updateProject(id, { status: "intake" });
-    return NextResponse.json({ error: "La génération a échoué, réessayez." }, { status: 502 });
+    return NextResponse.json(
+      { error: aiErrorMessage(err, "La génération a échoué, réessayez.") },
+      { status: 502 },
+    );
   }
 }

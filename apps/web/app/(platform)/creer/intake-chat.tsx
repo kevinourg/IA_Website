@@ -21,7 +21,11 @@ export function IntakeChat({ initialMessage }: { initialMessage?: string }) {
   const sentInitial = useRef(false);
   const bottom = useRef<HTMLDivElement>(null);
 
-  useEffect(() => bottom.current?.scrollIntoView({ behavior: "smooth" }), [messages, busy]);
+  // Accolades obligatoires : dans les navigateurs récents, scrollIntoView renvoie une Promise,
+  // que React prendrait pour une fonction de nettoyage (« destroy is not a function »).
+  useEffect(() => {
+    bottom.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, busy]);
 
   async function ensureProject(): Promise<string> {
     if (projectId) return projectId;
@@ -46,7 +50,10 @@ export function IntakeChat({ initialMessage }: { initialMessage?: string }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ content }),
       });
-      if (!res.ok) throw new Error("Le service est momentanément indisponible");
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(body.error ?? "Le service est momentanément indisponible");
+      }
       const data = (await res.json()) as { reply: string; readyToGenerate: boolean };
       setMessages((m) => [...m, { role: "assistant", content: data.reply }]);
       setReady(data.readyToGenerate);
@@ -101,7 +108,11 @@ export function IntakeChat({ initialMessage }: { initialMessage?: string }) {
         <div ref={bottom} />
       </div>
 
-      {error && <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-red-700">{error}</p>}
+      {error && (
+        <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 whitespace-pre-wrap text-red-700">
+          {error}
+        </p>
+      )}
 
       {ready && (
         <button

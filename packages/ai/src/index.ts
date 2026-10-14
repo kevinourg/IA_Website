@@ -7,7 +7,7 @@ export * from "./provider";
 export * from "./pipeline";
 export * from "./patch";
 export { MockProvider } from "./mock";
-export { ClaudeCliProvider } from "./claude-cli";
+export { ClaudeCliProvider, checkClaudeCli, resolveClaudeLauncher } from "./claude-cli";
 
 export type AiProviderName = "anthropic" | "claude-cli" | "mock";
 

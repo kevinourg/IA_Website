@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { intakeTurn } from "@site-ia/ai";
+import { aiErrorMessage } from "@/lib/errors";
 import { ai, repo, trackUsage } from "@/lib/services";
 
 const Body = z.object({ content: z.string().trim().min(1).max(2000) });
@@ -25,7 +26,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     ...project.conversation,
     { role: "user" as const, content: parsed.data.content },
   ];
-  const turn = await intakeTurn(ai(), history);
+  let turn;
+  try {
+    turn = await intakeTurn(ai(), history);
+  } catch (err) {
+    console.error("[intake]", err);
+    return NextResponse.json(
+      { error: aiErrorMessage(err, "Le service est momentanément indisponible.") },
+      { status: 502 },
+    );
+  }
   await trackUsage(id, turn.usage);
   await repo().updateProject(id, {
     conversation: [...history, { role: "assistant", content: turn.reply }],

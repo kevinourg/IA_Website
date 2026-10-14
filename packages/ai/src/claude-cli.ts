@@ -1,7 +1,8 @@
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import type { z } from "zod";
 import { TASK_TIER, type ModelTier } from "./models";
 import { toInputSchema, type AiProvider, type StructuredRequest } from "./provider";
@@ -26,9 +27,74 @@ type CliResult = {
   usage?: { input_tokens?: number; output_tokens?: number; cache_read_input_tokens?: number };
 };
 
+type Launcher = { file: string; prefix: string[] };
+
+/**
+ * Trouve comment lancer Claude Code. Sous Windows, l'installation npm crée un `claude.cmd`
+ * que Node ne peut pas exécuter sans shell : on lit ce lanceur pour retrouver le vrai
+ * programme (claude.exe ou cli.js) et on l'appelle directement.
+ */
+export function resolveClaudeLauncher(command = "claude"): Launcher {
+  if (process.platform !== "win32") return { file: command, prefix: [] };
+  if (/\.exe$/i.test(command)) return { file: command, prefix: [] };
+  if (/\.js$/i.test(command)) return { file: process.execPath, prefix: [command] };
+
+  const candidates: string[] = [];
+  try {
+    candidates.push(
+      ...execFileSync("where.exe", [command], { encoding: "utf8" })
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter(Boolean),
+    );
+  } catch {
+    /* pas dans le PATH */
+  }
+  const home = process.env.USERPROFILE ?? "";
+  candidates.push(join(home, ".local", "bin", "claude.exe"));
+
+  const exe = candidates.find((c) => /\.exe$/i.test(c) && existsSync(c));
+  if (exe) return { file: exe, prefix: [] };
+
+  const cmd = candidates.find((c) => /\.cmd$/i.test(c) && existsSync(c));
+  if (cmd) {
+    const shim = readFileSync(cmd, "utf8");
+    const target = /%dp0%\\([^"%\r\n]+\.(?:js|exe))/i.exec(shim)?.[1];
+    if (target) {
+      const full = join(dirname(cmd), target);
+      if (existsSync(full)) {
+        return /\.exe$/i.test(full)
+          ? { file: full, prefix: [] }
+          : { file: process.execPath, prefix: [full] };
+      }
+    }
+  }
+  return { file: command, prefix: [] };
+}
+
+/** Vérifie que Claude Code est lançable (utilisé par /api/health). */
+export function checkClaudeCli(command = "claude"): { ok: boolean; detail: string } {
+  try {
+    const { file, prefix } = resolveClaudeLauncher(command);
+    const version = execFileSync(file, [...prefix, "--version"], {
+      encoding: "utf8",
+      timeout: 20_000,
+      windowsHide: true,
+    }).trim();
+    return { ok: true, detail: `${version} (${file})` };
+  } catch (e) {
+    return { ok: false, detail: e instanceof Error ? e.message : String(e) };
+  }
+}
+
 function run(command: string, args: string[], input: string, cwd: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { cwd, stdio: ["pipe", "pipe", "pipe"], windowsHide: true });
+    const launcher = resolveClaudeLauncher(command);
+    const child = spawn(launcher.file, [...launcher.prefix, ...args], {
+      cwd,
+      stdio: ["pipe", "pipe", "pipe"],
+      windowsHide: true,
+    });
     let out = "";
     let err = "";
     const timer = setTimeout(() => {
