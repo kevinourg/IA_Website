@@ -76,7 +76,8 @@ export function resolveClaudeLauncher(command = "claude"): Launcher {
 export function checkClaudeCli(command = "claude"): { ok: boolean; detail: string } {
   try {
     const { file, prefix } = resolveClaudeLauncher(command);
-    const version = execFileSync(file, [...prefix, "--version"], {
+    // turbopackIgnore : lanceur résolu à l'exécution, ne pas tracer tout le projet au build.
+    const version = execFileSync(/* turbopackIgnore: true */ file, [...prefix, "--version"], {
       encoding: "utf8",
       timeout: 20_000,
       windowsHide: true,
@@ -90,7 +91,7 @@ export function checkClaudeCli(command = "claude"): { ok: boolean; detail: strin
 function run(command: string, args: string[], input: string, cwd: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const launcher = resolveClaudeLauncher(command);
-    const child = spawn(launcher.file, [...launcher.prefix, ...args], {
+    const child = spawn(/* turbopackIgnore: true */ launcher.file, [...launcher.prefix, ...args], {
       cwd,
       stdio: ["pipe", "pipe", "pipe"],
       windowsHide: true,

@@ -1,11 +1,13 @@
 import { randomUUID } from "node:crypto";
 import type { SiteSpec } from "@site-ia/core";
-import type { ProjectRecord, Repository } from "./repository";
+import type { ContactSubmission, ProjectRecord, Repository, SiteVersionSource } from "./repository";
+import { newAccessToken } from "./token";
 
 /** Stockage en mémoire — développement sans base de données et tests. */
 export class MemoryRepository implements Repository {
   private projects = new Map<string, ProjectRecord>();
   private versions = new Map<string, SiteSpec[]>();
+  private submissions = new Map<string, ContactSubmission[]>();
 
   async createProject() {
     const p: ProjectRecord = {
@@ -15,6 +17,7 @@ export class MemoryRepository implements Repository {
       conversation: [],
       brief: {},
       customerId: null,
+      accessToken: newAccessToken(),
     };
     this.projects.set(p.id, p);
     return structuredClone(p);
@@ -25,13 +28,20 @@ export class MemoryRepository implements Repository {
     return p ? structuredClone(p) : null;
   }
 
+  async findProjectByToken(token: string) {
+    for (const p of this.projects.values()) {
+      if (p.accessToken === token) return structuredClone(p);
+    }
+    return null;
+  }
+
   async updateProject(id: string, patch: Partial<ProjectRecord>) {
     const p = this.projects.get(id);
     if (!p) throw new Error(`Projet introuvable : ${id}`);
     this.projects.set(id, { ...p, ...structuredClone(patch) });
   }
 
-  async saveSiteVersion(projectId: string, spec: SiteSpec, _source?: string) {
+  async saveSiteVersion(projectId: string, spec: SiteSpec, _source?: SiteVersionSource) {
     const list = this.versions.get(projectId) ?? [];
     list.push(structuredClone(spec));
     this.versions.set(projectId, list);
@@ -41,6 +51,14 @@ export class MemoryRepository implements Repository {
   async getLatestSpec(projectId: string) {
     const list = this.versions.get(projectId);
     return list?.length ? structuredClone(list[list.length - 1]!) : null;
+  }
+
+  async getLatestSpecs(projectId: string, count: number) {
+    const list = this.versions.get(projectId) ?? [];
+    return list
+      .map((spec, i) => ({ version: i + 1, spec: structuredClone(spec) }))
+      .reverse()
+      .slice(0, count);
   }
 
   async findProjectByHost(host: string, rootWithPort: string) {
@@ -56,5 +74,17 @@ export class MemoryRepository implements Repository {
   }
 
   async recordUsage() {}
-  async saveContactSubmission() {}
+
+  async saveContactSubmission(
+    projectId: string,
+    data: { name: string; contact: string; message: string },
+  ) {
+    const list = this.submissions.get(projectId) ?? [];
+    list.push({ id: randomUUID(), ...data, createdAt: new Date() });
+    this.submissions.set(projectId, list);
+  }
+
+  async listContactSubmissions(projectId: string) {
+    return [...(this.submissions.get(projectId) ?? [])].reverse();
+  }
 }

@@ -18,8 +18,8 @@
    de 20 métiers × villes ; mesurer le coût réel par site dans `ai_usage`
 3. **Streaming** de la génération (afficher le site qui se construit) — effet « waouh » de l'aperçu
 4. **Images** : banque d'images libre de droits par métier (Unsplash/Pexels API) + upload des photos du client
-5. **Espace client** : connexion par lien magique, chat de modification, historique des versions,
-   demandes reçues
+5. ~~Espace client~~ ✅ (lien privé secret, modification par message, annulation, demandes reçues)
+   — reste : envoyer le lien par e-mail, connexion par lien magique pour le retrouver
 6. **Provisioning domaine** : achat .fr via registrar (OVH / Gandi API), DNS, HTTPS, domaines clients
 7. **E-mails transactionnels** (Resend ou Brevo) : bienvenue, site en ligne, nouvelle demande, rapport mensuel
 8. **Mentions légales complètes** : collecter SIRET, forme juridique, directeur de publication à la commande

@@ -13,4 +13,14 @@ describe("MemoryRepository", () => {
     const found = await repo.findProjectByHost("plomberie-martin.exemple.fr", "exemple.fr");
     expect(found?.id).toBe(p.id);
   });
+
+  it("retrouve un projet par son lien privé et liste les demandes reçues", async () => {
+    const repo = new MemoryRepository();
+    const p = await repo.createProject();
+    expect(p.accessToken.length).toBeGreaterThanOrEqual(32);
+    expect((await repo.findProjectByToken(p.accessToken))?.id).toBe(p.id);
+    expect(await repo.findProjectByToken("faux")).toBeNull();
+    await repo.saveContactSubmission(p.id, { name: "A", contact: "a@b.fr", message: "Bonjour" });
+    expect((await repo.listContactSubmissions(p.id))[0]?.message).toBe("Bonjour");
+  });
 });

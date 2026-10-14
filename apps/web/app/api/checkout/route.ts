@@ -4,6 +4,7 @@ import { OFFER } from "@site-ia/core";
 import { env } from "@/lib/env";
 import { repo } from "@/lib/services";
 import { stripe } from "@/lib/stripe";
+import { espaceUrl } from "@/lib/urls";
 
 const Body = z.object({ projectId: z.string().uuid() });
 
@@ -29,8 +30,7 @@ export async function POST(req: Request) {
   if (!stripeReady && process.env.NODE_ENV !== "production") {
     await repo().updateProject(projectId, { status: "paid" });
     await repo().updateProject(projectId, { status: "live" });
-    const app = new URL(env.NEXT_PUBLIC_APP_URL);
-    return NextResponse.redirect(`${app.protocol}//${project.slug}.${app.host}/`, 303);
+    return NextResponse.redirect(espaceUrl(project.accessToken), 303);
   }
   if (!s || !stripeReady) {
     return NextResponse.json(
@@ -55,7 +55,8 @@ export async function POST(req: Request) {
     customer_email: project.brief.contact?.email,
     billing_address_collection: "required",
     tax_id_collection: { enabled: true },
-    success_url: `${env.NEXT_PUBLIC_APP_URL}/commande/merci?session_id={CHECKOUT_SESSION_ID}`,
+    // Après paiement, le client arrive directement dans son espace (lien privé).
+    success_url: espaceUrl(project.accessToken),
     cancel_url: `${env.NEXT_PUBLIC_APP_URL}/apercu/${projectId}`,
   });
 

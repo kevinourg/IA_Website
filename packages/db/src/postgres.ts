@@ -1,9 +1,10 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import type { SiteSpec } from "@site-ia/core";
 import * as schema from "./schema";
-import type { ProjectRecord, Repository, UsageRecord } from "./repository";
+import type { ProjectRecord, Repository, SiteVersionSource, UsageRecord } from "./repository";
+import { newAccessToken } from "./token";
 
 type Db = PostgresJsDatabase<typeof schema>;
 
@@ -19,6 +20,7 @@ function toRecord(row: typeof schema.projects.$inferSelect): ProjectRecord {
     conversation: row.conversation,
     brief: row.brief,
     customerId: row.customerId,
+    accessToken: row.accessToken,
   };
 }
 
@@ -26,12 +28,22 @@ export class PostgresRepository implements Repository {
   constructor(private db: Db) {}
 
   async createProject() {
-    const [row] = await this.db.insert(schema.projects).values({}).returning();
+    const [row] = await this.db
+      .insert(schema.projects)
+      .values({ accessToken: newAccessToken() })
+      .returning();
     return toRecord(row!);
   }
 
   async getProject(id: string) {
     const row = await this.db.query.projects.findFirst({ where: eq(schema.projects.id, id) });
+    return row ? toRecord(row) : null;
+  }
+
+  async findProjectByToken(token: string) {
+    const row = await this.db.query.projects.findFirst({
+      where: eq(schema.projects.accessToken, token),
+    });
     return row ? toRecord(row) : null;
   }
 
@@ -42,7 +54,7 @@ export class PostgresRepository implements Repository {
       .where(eq(schema.projects.id, id));
   }
 
-  async saveSiteVersion(projectId: string, spec: SiteSpec, source: "generate" | "edit" | "manual") {
+  async saveSiteVersion(projectId: string, spec: SiteSpec, source: SiteVersionSource) {
     return this.db.transaction(async (tx) => {
       const [{ next } = { next: 1 }] = await tx
         .select({ next: sql<number>`coalesce(max(${schema.siteVersions.version}), 0) + 1` })
@@ -61,12 +73,21 @@ export class PostgresRepository implements Repository {
     return row?.spec ?? null;
   }
 
+  async getLatestSpecs(projectId: string, count: number) {
+    const rows = await this.db.query.siteVersions.findMany({
+      where: eq(schema.siteVersions.projectId, projectId),
+      orderBy: desc(schema.siteVersions.version),
+      limit: count,
+    });
+    return rows.map((r) => ({ version: r.version, spec: r.spec }));
+  }
+
   async findProjectByHost(host: string, rootWithPort: string) {
     const hostname = host.replace(/:\d+$/, "");
     const rootDomain = rootWithPort.replace(/:\d+$/, "");
     // 1. Domaine personnalisé vérifié
     const domain = await this.db.query.domains.findFirst({
-      where: and(eq(schema.domains.hostname, hostname)),
+      where: eq(schema.domains.hostname, hostname),
     });
     if (domain?.verifiedAt) return this.getProject(domain.projectId);
     // 2. Sous-domaine <slug>.<rootDomain>
@@ -87,5 +108,13 @@ export class PostgresRepository implements Repository {
     data: { name: string; contact: string; message: string },
   ) {
     await this.db.insert(schema.contactSubmissions).values({ projectId, ...data });
+  }
+
+  async listContactSubmissions(projectId: string) {
+    return this.db.query.contactSubmissions.findMany({
+      where: eq(schema.contactSubmissions.projectId, projectId),
+      orderBy: desc(schema.contactSubmissions.createdAt),
+      limit: 100,
+    });
   }
 }

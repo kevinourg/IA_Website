@@ -38,6 +38,8 @@ export const projects = pgTable(
     customerId: uuid("customer_id").references(() => customers.id),
     status: projectStatus("status").notNull().default("intake"),
     slug: text("slug").unique(),
+    /** Secret du lien privé de l'espace client. */
+    accessToken: text("access_token").notNull().unique(),
     conversation: jsonb("conversation").$type<ChatMessage[]>().notNull().default([]),
     brief: jsonb("brief").$type<Partial<BusinessBrief>>().notNull().default({}),
     leadId: uuid("lead_id"), // origine commerciale (phase 2 : acquisition)
@@ -57,7 +59,7 @@ export const siteVersions = pgTable(
       .references(() => projects.id, { onDelete: "cascade" }),
     version: integer("version").notNull(),
     spec: jsonb("spec").$type<SiteSpec>().notNull(),
-    source: text("source", { enum: ["generate", "edit", "manual"] }).notNull(),
+    source: text("source", { enum: ["generate", "edit", "manual", "undo"] }).notNull(),
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex("site_versions_project_version_idx").on(t.projectId, t.version)],
