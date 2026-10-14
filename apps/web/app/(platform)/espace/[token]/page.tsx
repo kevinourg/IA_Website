@@ -4,7 +4,9 @@ import type { ProjectStatus } from "@site-ia/core";
 import { BRAND } from "@/lib/brand";
 import { repo } from "@/lib/services";
 import { clientSiteUrl } from "@/lib/urls";
+import { countSince, siteStats } from "@/lib/stats";
 import { EditPanel } from "./edit-panel";
+import { StatsPanel } from "./stats-panel";
 
 export const metadata: Metadata = {
   title: "Mon espace",
@@ -30,7 +32,11 @@ export default async function EspacePage({ params }: { params: Promise<{ token: 
   if (!project) notFound();
 
   const [latest] = await repo().getLatestSpecs(project.id, 1);
-  const submissions = await repo().listContactSubmissions(project.id);
+  const [submissions, stats] = await Promise.all([
+    repo().listContactSubmissions(project.id),
+    siteStats(project.id, 30),
+  ]);
+  const recentRequests = countSince(submissions, 30);
   const name = latest?.spec.business.name ?? project.brief.businessName ?? "Mon site";
   const siteUrl = project.slug && project.status === "live" ? clientSiteUrl(project.slug) : null;
 
@@ -83,6 +89,8 @@ export default async function EspacePage({ params }: { params: Promise<{ token: 
       ) : (
         <p className="mt-8 text-ink/60">Votre site n&apos;a pas encore été généré.</p>
       )}
+
+      {project.status === "live" && <StatsPanel stats={stats} requests={recentRequests} />}
 
       <section className="mt-12">
         <h2 className="text-lg font-semibold">Demandes reçues ({submissions.length})</h2>

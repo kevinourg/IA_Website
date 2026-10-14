@@ -15,6 +15,8 @@ const EnvSchema = z.object({
   /** E-mails : sans clé, ils s'affichent sur /dev/emails au lieu d'être envoyés. */
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default("SiteIA <onboarding@resend.dev>"),
+  /** Secret des tâches planifiées (rapport mensuel) : en-tête Authorization: Bearer <secret>. */
+  CRON_SECRET: z.string().optional(),
   ROOT_DOMAIN: z.string().default("localhost:3000"),
   NEXT_PUBLIC_APP_URL: z.string().default("http://localhost:3000"),
   /** Nombre max de générations complètes par projet (protège le budget IA). */

@@ -23,4 +23,17 @@ describe("MemoryRepository", () => {
     await repo.saveContactSubmission(p.id, { name: "A", contact: "a@b.fr", message: "Bonjour" });
     expect((await repo.listContactSubmissions(p.id))[0]?.message).toBe("Bonjour");
   });
+
+  it("cumule les statistiques du jour", async () => {
+    const repo = new MemoryRepository();
+    const p = await repo.createProject();
+    await repo.recordStats(p.id, "2026-10-14", [
+      { kind: "pageview", key: "/" },
+      { kind: "visit", key: "Google" },
+    ]);
+    await repo.recordStats(p.id, "2026-10-14", [{ kind: "pageview", key: "/" }]);
+    const rows = await repo.getStats(p.id, "2026-10-01");
+    expect(rows).toContainEqual({ day: "2026-10-14", kind: "pageview", key: "/", count: 2 });
+    expect(await repo.getStats(p.id, "2026-10-15")).toEqual([]);
+  });
 });

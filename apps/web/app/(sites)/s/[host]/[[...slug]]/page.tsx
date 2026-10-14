@@ -45,6 +45,7 @@ export default async function ClientSite({
       baseUrl={site.baseUrl}
       legal={site.project.legal}
       hosting={HOSTING}
+      analyticsEndpoint="/api/v"
       notice={
         envoye
           ? "Merci, votre message a bien été envoyé. Nous vous répondons rapidement."

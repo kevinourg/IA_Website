@@ -1,5 +1,6 @@
 import {
   boolean,
+  date,
   index,
   integer,
   jsonb,
@@ -16,6 +17,7 @@ import {
   type ChatMessage,
   type LegalInfo,
   type SiteSpec,
+  type StatKind,
 } from "@site-ia/core";
 
 const id = () => uuid("id").primaryKey().defaultRandom();
@@ -144,4 +146,22 @@ export const leads = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index("leads_status_idx").on(t.status)],
+);
+
+/**
+ * Statistiques de visite des sites clients : compteurs agrégés par jour, sans aucune donnée
+ * personnelle (ni IP, ni identifiant, ni cookie). key = chemin de page (pageview) ou source (visit).
+ */
+export const siteStatsDaily = pgTable(
+  "site_stats_daily",
+  {
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    day: date("day").notNull(),
+    kind: text("kind").$type<StatKind>().notNull(),
+    key: text("key").notNull().default(""),
+    count: integer("count").notNull().default(0),
+  },
+  (t) => [uniqueIndex("site_stats_daily_pk").on(t.projectId, t.day, t.kind, t.key)],
 );

@@ -4,3 +4,4 @@ export * from "./pricing";
 export * from "./project";
 export * from "./slug";
 export * from "./legal";
+export * from "./stats";

@@ -1,4 +1,12 @@
-import type { BusinessBrief, ChatMessage, LegalInfo, ProjectStatus, SiteSpec } from "@site-ia/core";
+import type {
+  BusinessBrief,
+  ChatMessage,
+  LegalInfo,
+  ProjectStatus,
+  SiteSpec,
+  StatKind,
+  StatRow,
+} from "@site-ia/core";
 
 export type ProjectRecord = {
   id: string;
@@ -61,4 +69,14 @@ export interface Repository {
     data: { name: string; contact: string; message: string },
   ): Promise<void>;
   listContactSubmissions(projectId: string): Promise<ContactSubmission[]>;
+  /** Projets en ligne (rapport mensuel). */
+  listLiveProjects(): Promise<ProjectRecord[]>;
+  /** Incrémente les compteurs de visite du jour (aucune donnée personnelle). */
+  recordStats(
+    projectId: string,
+    day: string,
+    events: { kind: StatKind; key: string }[],
+  ): Promise<void>;
+  /** Compteurs depuis `fromDay` inclus (AAAA-MM-JJ). */
+  getStats(projectId: string, fromDay: string): Promise<StatRow[]>;
 }

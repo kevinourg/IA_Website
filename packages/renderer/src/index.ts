@@ -3,3 +3,4 @@ export { LegalNotice } from "./legal";
 export { SectionView } from "./sections";
 export { siteCss, fontsHref } from "./theme";
 export { jsonLd, llmsTxt, sitemapXml } from "./seo";
+export { analyticsScript } from "./analytics";

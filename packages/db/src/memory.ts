@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { SiteSpec } from "@site-ia/core";
+import type { SiteSpec, StatKind, StatRow } from "@site-ia/core";
 import type { ContactSubmission, ProjectRecord, Repository, SiteVersionSource } from "./repository";
 import { newAccessToken } from "./token";
 
@@ -8,6 +8,8 @@ export class MemoryRepository implements Repository {
   private projects = new Map<string, ProjectRecord>();
   private versions = new Map<string, SiteSpec[]>();
   private submissions = new Map<string, ContactSubmission[]>();
+  /** projectId → "jour|type|clé" → nombre */
+  private stats = new Map<string, Map<string, number>>();
 
   async createProject() {
     const p: ProjectRecord = {
@@ -95,5 +97,30 @@ export class MemoryRepository implements Repository {
 
   async listContactSubmissions(projectId: string) {
     return [...(this.submissions.get(projectId) ?? [])].reverse();
+  }
+
+  async listLiveProjects() {
+    return [...this.projects.values()]
+      .filter((p) => p.status === "live")
+      .map((p) => structuredClone(p));
+  }
+
+  async recordStats(projectId: string, day: string, events: { kind: StatKind; key: string }[]) {
+    const m = this.stats.get(projectId) ?? new Map<string, number>();
+    for (const e of events) {
+      const k = `${day}|${e.kind}|${e.key}`;
+      m.set(k, (m.get(k) ?? 0) + 1);
+    }
+    this.stats.set(projectId, m);
+  }
+
+  async getStats(projectId: string, fromDay: string): Promise<StatRow[]> {
+    const rows: StatRow[] = [];
+    for (const [k, count] of this.stats.get(projectId) ?? []) {
+      const [day, kind, ...key] = k.split("|");
+      if (day! >= fromDay)
+        rows.push({ day: day!, kind: kind as StatKind, key: key.join("|"), count });
+    }
+    return rows;
   }
 }

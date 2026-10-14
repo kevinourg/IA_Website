@@ -1,7 +1,7 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import type { SiteSpec } from "@site-ia/core";
+import type { SiteSpec, StatKind, StatRow } from "@site-ia/core";
 import * as schema from "./schema";
 import type { ProjectRecord, Repository, SiteVersionSource, UsageRecord } from "./repository";
 import { newAccessToken } from "./token";
@@ -125,5 +125,33 @@ export class PostgresRepository implements Repository {
       orderBy: desc(schema.contactSubmissions.createdAt),
       limit: 100,
     });
+  }
+
+  async listLiveProjects() {
+    const rows = await this.db.query.projects.findMany({
+      where: eq(schema.projects.status, "live"),
+    });
+    return rows.map(toRecord);
+  }
+
+  async recordStats(projectId: string, day: string, events: { kind: StatKind; key: string }[]) {
+    if (events.length === 0) return;
+    const t = schema.siteStatsDaily;
+    await this.db
+      .insert(t)
+      .values(events.map((e) => ({ projectId, day, kind: e.kind, key: e.key, count: 1 })))
+      .onConflictDoUpdate({
+        target: [t.projectId, t.day, t.kind, t.key],
+        set: { count: sql`${t.count} + excluded.count` },
+      });
+  }
+
+  async getStats(projectId: string, fromDay: string): Promise<StatRow[]> {
+    const t = schema.siteStatsDaily;
+    const rows = await this.db
+      .select({ day: t.day, kind: t.kind, key: t.key, count: t.count })
+      .from(t)
+      .where(and(eq(t.projectId, projectId), gte(t.day, fromDay)));
+    return rows;
   }
 }

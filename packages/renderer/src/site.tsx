@@ -1,6 +1,7 @@
 import { findPage, type HostingInfo, type LegalInfo, type SiteSpec } from "@site-ia/core";
 import { LEGAL_SLUG, LegalNotice } from "./legal";
 import { SectionView } from "./sections";
+import { analyticsScript } from "./analytics";
 import { jsonLd } from "./seo";
 import { fontsHref, siteCss } from "./theme";
 
@@ -19,6 +20,7 @@ export function SitePage({
   legal,
   hosting,
   notice,
+  analyticsEndpoint,
 }: {
   spec: SiteSpec;
   slug: string;
@@ -28,6 +30,8 @@ export function SitePage({
   hosting?: HostingInfo | null;
   /** Bandeau de confirmation (ex. « message envoyé »). */
   notice?: string;
+  /** URL de collecte des statistiques ; absent = aucune mesure (aperçus). */
+  analyticsEndpoint?: string;
 }) {
   const isLegal = slug === LEGAL_SLUG;
   const page = isLegal ? null : findPage(spec, slug);
@@ -89,6 +93,9 @@ export function SitePage({
           </p>
         </div>
       </footer>
+      {analyticsEndpoint && (
+        <script dangerouslySetInnerHTML={{ __html: analyticsScript(analyticsEndpoint) }} />
+      )}
     </div>
   );
 }

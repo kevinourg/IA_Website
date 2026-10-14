@@ -74,3 +74,15 @@ describe("mentions légales", () => {
     expect(html).toContain("complétées lors de la mise en ligne");
   });
 });
+
+describe("mesure d'audience", () => {
+  it("n'est insérée que si un point de collecte est fourni", () => {
+    const sans = renderToStaticMarkup(<SitePage spec={sampleSpec} slug="" baseUrl="x" />);
+    const avec = renderToStaticMarkup(
+      <SitePage spec={sampleSpec} slug="" baseUrl="x" analyticsEndpoint="/api/v" />,
+    );
+    expect(sans).not.toContain("sendBeacon");
+    expect(avec).toContain("sendBeacon");
+    expect(avec).not.toContain("document.cookie");
+  });
+});

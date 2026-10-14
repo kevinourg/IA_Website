@@ -19,25 +19,30 @@
       (`apps/web/lib/brand.ts`, `packages/core/src/pricing.ts`)
 - [ ] **2. Qualité de génération** — _Bloquant_ — IA branchée ✅, reste à améliorer textes et design
       sur ~20 métiers × villes et mesurer le coût réel par site (`ai_usage`)
-- [ ] **3. Affichage du site pendant sa construction** (streaming) — plus
-- [ ] **4. Images** : banque d'images par métier + photos du client — fortement conseillé
+  - [ ] Images : banque d'images libre de droits par métier + photos fournies par le client
 - [x] **5. Espace client** — lien privé secret, modification par message, annulation, demandes reçues
 - [ ] **6. Achat automatique des noms de domaine** (registrar OVH / Gandi, DNS, HTTPS) — _Bloquant_
 - [x] **7. E-mails automatiques** — site en ligne + lien de l'espace, nouvelle demande reçue,
       « retrouver mon espace » ; boîte de test `/dev/emails` en local
   - [ ] Brancher Resend (`RESEND_API_KEY`) et vérifier le domaine d'envoi — au déploiement (11)
-  - [ ] Rapport mensuel de visites — avec les statistiques (10)
+  - [x] Rapport mensuel de visites (avec l'étape 10)
 - [x] **8. Mentions légales complètes** — saisies à la commande (forme juridique, SIRET vérifié,
       siège, capital, directeur de publication, TVA), page générée + information RGPD et CNIL
   - [ ] Renseigner l'hébergeur (`HOSTING` dans `apps/web/lib/brand.ts`) — au déploiement (11)
 - [ ] **9. Back-office** (projets, coûts IA, chiffre d'affaires, relance des aperçus non payés) — plus tard
-- [ ] **10. Statistiques de visite** respectueuses du RGPD (Plausible / Umami) — plus tard
+- [x] **10. Statistiques de visite** — mesure maison sans cookie ni donnée personnelle (exemptée de
+      consentement) : visites, pages vues, sources (Google, ChatGPT…), clics téléphone / e-mail ;
+      affichées dans l'espace client + rapport mensuel par e-mail
+  - [ ] Planifier `/api/cron/rapport-mensuel` le 1er du mois avec `CRON_SECRET` — au déploiement (11)
 - [ ] **11. Mise en ligne de la plateforme** (Vercel + Postgres UE), monitoring, CGV,
       politique de confidentialité — _Bloquant_
   - [ ] Héberger les polices des sites clients en local (Google Fonts transmet l'IP des visiteurs
         à Google : point d'attention RGPD)
 
 **Chemin le plus court vers un premier site vendu** : 1 → 2 → 6 → 11.
+
+_Retirés : l'ancienne étape 3 (affichage du site pendant sa construction) ; l'ancienne étape 4
+(images) est intégrée à l'étape 2._
 
 ## Phase 2 — Acquisition de leads
 

@@ -95,3 +95,48 @@ export function accessLinksEmail(p: {
     text: `Vos liens d'accès :\n${p.sites.map((s) => `- ${s.businessName} : ${s.espaceUrl}`).join("\n")}\n`,
   };
 }
+
+/** Rapport mensuel de fréquentation. */
+export function monthlyReportEmail(p: {
+  to: string;
+  businessName: string;
+  monthLabel: string;
+  visits: number;
+  pageviews: number;
+  calls: number;
+  emails: number;
+  requests: number;
+  topSources: { key: string; count: number }[];
+  espaceUrl: string;
+}): Email {
+  const rows: [string, number][] = [
+    ["Visites", p.visits],
+    ["Pages vues", p.pageviews],
+    ["Clics sur votre téléphone", p.calls],
+    ["Clics sur votre e-mail", p.emails],
+    ["Demandes via le formulaire", p.requests],
+  ];
+  const table = rows
+    .map(
+      ([label, value]) =>
+        `<tr><td style="padding:6px 0">${escapeHtml(label)}</td><td style="padding:6px 0;text-align:right;font-weight:700">${value}</td></tr>`,
+    )
+    .join("");
+  const sources = p.topSources.length
+    ? `<p style="margin-top:20px"><strong>D'où viennent vos visiteurs :</strong> ${p.topSources
+        .map((s) => `${escapeHtml(s.key)} (${s.count})`)
+        .join(", ")}</p>`
+    : "";
+  return {
+    to: p.to,
+    subject: `Votre site ${p.businessName} en ${p.monthLabel}`,
+    html: layout(
+      `Votre site en ${p.monthLabel}`,
+      `<table style="width:100%;border-collapse:collapse">${table}</table>${sources}
+${button(p.espaceUrl, "Voir le détail dans mon espace")}`,
+    ),
+    text: `Votre site ${p.businessName} en ${p.monthLabel}\n\n${rows
+      .map(([l, v]) => `${l} : ${v}`)
+      .join("\n")}\n\nDétail : ${p.espaceUrl}\n`,
+  };
+}

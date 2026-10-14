@@ -105,7 +105,11 @@ export function LegalNotice({
         </p>
 
         <h2>Cookies</h2>
-        <p>Ce site ne dépose aucun cookie publicitaire ni de mesure d&apos;audience nominative.</p>
+        <p>
+          Ce site ne dépose aucun cookie. La fréquentation est mesurée de façon anonyme (pages vues,
+          provenance des visites, clics sur les coordonnées), sans adresse IP ni identifiant, sous
+          forme de compteurs journaliers : cette mesure ne nécessite pas votre consentement.
+        </p>
       </div>
     </section>
   );

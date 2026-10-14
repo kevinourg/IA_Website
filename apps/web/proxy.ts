@@ -16,8 +16,8 @@ export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (PLATFORM_HOSTS.has(hostname) || hostname.endsWith(".vercel.app")) return NextResponse.next();
-  // Le formulaire de contact des sites clients reste une API partagée.
-  if (pathname.startsWith("/api/contact")) return NextResponse.next();
+  // API partagées par les sites clients : formulaire de contact et mesure d'audience.
+  if (pathname.startsWith("/api/contact") || pathname === "/api/v") return NextResponse.next();
 
   const url = req.nextUrl.clone();
   url.pathname = `/s/${encodeURIComponent(host)}${pathname === "/" ? "" : pathname}`;
