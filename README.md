@@ -42,9 +42,13 @@ renseigne `CLAUDE_CLI_PATH` avec le chemin complet de `claude.exe`.
 ### Parcours à tester
 
 1. `http://localhost:3000` → décrire son activité → **Générer l'aperçu**
-2. Sur l'aperçu, **Mettre en ligne** (mode démo) → redirection vers
-   `http://<slug>.localhost:3000` : le site client en production.
-3. `llms.txt`, `sitemap.xml`, `robots.txt` et `/mentions-legales` sont servis automatiquement.
+2. Sur l'aperçu, **Mettre en ligne** → formulaire de commande (e-mail + mentions légales ;
+   SIRET de test valide : `732 829 320 00074`) → en mode démo, mise en ligne immédiate et
+   arrivée dans l'**espace client** (lien privé).
+3. Le site client est servi sur `http://<slug>.localhost:3000` avec `/mentions-legales`,
+   `llms.txt`, `sitemap.xml` et `robots.txt`.
+4. Les e-mails (site en ligne, nouvelle demande, lien perdu) s'affichent sur
+   `http://localhost:3000/dev/emails` tant que `RESEND_API_KEY` n'est pas défini.
 
 ### Avec Postgres
 

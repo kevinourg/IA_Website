@@ -1,3 +1,4 @@
+import "server-only";
 import { env } from "./env";
 
 /** Adresse publique du site d'un client : <slug>.<domaine racine>. */

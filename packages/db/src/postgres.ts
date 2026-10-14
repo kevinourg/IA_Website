@@ -21,6 +21,8 @@ function toRecord(row: typeof schema.projects.$inferSelect): ProjectRecord {
     brief: row.brief,
     customerId: row.customerId,
     accessToken: row.accessToken,
+    customerEmail: row.customerEmail,
+    legal: row.legal,
   };
 }
 
@@ -45,6 +47,13 @@ export class PostgresRepository implements Repository {
       where: eq(schema.projects.accessToken, token),
     });
     return row ? toRecord(row) : null;
+  }
+
+  async findProjectsByEmail(email: string) {
+    const rows = await this.db.query.projects.findMany({
+      where: eq(schema.projects.customerEmail, email.trim().toLowerCase()),
+    });
+    return rows.map(toRecord);
   }
 
   async updateProject(id: string, patch: Partial<ProjectRecord>) {

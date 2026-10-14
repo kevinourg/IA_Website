@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { canTransition } from "@site-ia/core";
 import { env } from "@/lib/env";
+import { goLive } from "@/lib/go-live";
 import { repo } from "@/lib/services";
 import { stripe } from "@/lib/stripe";
 
@@ -23,12 +24,8 @@ export async function POST(req: Request) {
     case "checkout.session.completed": {
       const projectId = event.data.object.metadata?.projectId;
       const project = projectId ? await repo().getProject(projectId) : null;
-      if (project && canTransition(project.status, "paid")) {
-        await repo().updateProject(project.id, { status: "paid" });
-        // TODO (provisioning) : réserver le domaine .fr, vérifier le DNS, envoyer l'e-mail
-        // de bienvenue, puis passer le projet en "live".
-        await repo().updateProject(project.id, { status: "live" });
-      }
+      // Mise en ligne + e-mail de bienvenue (adresse du site et lien privé de l'espace).
+      if (project) await goLive(project);
       break;
     }
     case "customer.subscription.deleted": {

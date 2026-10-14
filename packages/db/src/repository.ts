@@ -1,4 +1,4 @@
-import type { BusinessBrief, ChatMessage, ProjectStatus, SiteSpec } from "@site-ia/core";
+import type { BusinessBrief, ChatMessage, LegalInfo, ProjectStatus, SiteSpec } from "@site-ia/core";
 
 export type ProjectRecord = {
   id: string;
@@ -9,6 +9,10 @@ export type ProjectRecord = {
   customerId: string | null;
   /** Secret du lien privé de l'espace client (/espace/<token>). */
   accessToken: string;
+  /** E-mail du client (compte), saisi à la commande : accès à l'espace et notifications. */
+  customerEmail: string | null;
+  /** Informations légales pour les mentions légales, saisies à la commande. */
+  legal: LegalInfo | null;
 };
 
 export type UsageRecord = {
@@ -35,10 +39,15 @@ export interface Repository {
   createProject(): Promise<ProjectRecord>;
   getProject(id: string): Promise<ProjectRecord | null>;
   findProjectByToken(token: string): Promise<ProjectRecord | null>;
+  /** Projets commandés avec cet e-mail (pour renvoyer les liens d'accès). */
+  findProjectsByEmail(email: string): Promise<ProjectRecord[]>;
   updateProject(
     id: string,
     patch: Partial<
-      Pick<ProjectRecord, "status" | "slug" | "conversation" | "brief" | "customerId">
+      Pick<
+        ProjectRecord,
+        "status" | "slug" | "conversation" | "brief" | "customerId" | "customerEmail" | "legal"
+      >
     >,
   ): Promise<void>;
   saveSiteVersion(projectId: string, spec: SiteSpec, source: SiteVersionSource): Promise<number>;

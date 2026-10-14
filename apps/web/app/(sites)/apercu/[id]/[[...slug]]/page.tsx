@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { OFFER, formatEuros } from "@site-ia/core";
 import { SitePage } from "@site-ia/renderer";
+import { HOSTING } from "@/lib/brand";
 import { env } from "@/lib/env";
 import { repo } from "@/lib/services";
 
@@ -37,22 +38,20 @@ export default async function PreviewPage({ params }: { params: Params }) {
           Aperçu de votre site — <strong>{spec.business.name}</strong>
         </span>
         {project.status === "preview" && (
-          <form method="post" action="/api/checkout">
-            <input type="hidden" name="projectId" value={id} />
-            <button
-              style={{
-                background: "#ffb547",
-                color: "#12131a",
-                border: 0,
-                borderRadius: 999,
-                padding: "10px 18px",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              Mettre en ligne — {formatEuros(OFFER.creation.amountCents)}
-            </button>
-          </form>
+          <a
+            href={`/commander/${id}`}
+            target="_top"
+            style={{
+              background: "#ffb547",
+              color: "#12131a",
+              borderRadius: 999,
+              padding: "10px 18px",
+              fontWeight: 700,
+              textDecoration: "none",
+            }}
+          >
+            Mettre en ligne — {formatEuros(OFFER.creation.amountCents)}
+          </a>
         )}
       </div>
       <SitePage
@@ -60,6 +59,8 @@ export default async function PreviewPage({ params }: { params: Params }) {
         slug={slug.join("/")}
         baseUrl={env.NEXT_PUBLIC_APP_URL}
         linkBase={`/apercu/${id}`}
+        legal={project.legal}
+        hosting={HOSTING}
       />
     </>
   );

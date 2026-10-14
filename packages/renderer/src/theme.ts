@@ -83,6 +83,8 @@ font-family:"${f.body}",system-ui,sans-serif;color:var(--text);background:var(--
 .s-form{display:grid;gap:12px;max-width:560px;margin-top:24px}
 .s-form input,.s-form textarea{font:inherit;padding:12px 14px;border-radius:var(--radius);border:1px solid color-mix(in srgb,var(--text) 25%,transparent);background:var(--bg);color:var(--text)}
 .s-footer{background:var(--text);color:var(--bg);padding:40px 0;font-size:.95rem}.s-footer a{color:var(--bg)}
+.s-notice{margin:0;padding:12px 20px;background:var(--secondary);color:#fff;text-align:center;font-weight:600}
+.s-legal h1{font-size:clamp(1.8rem,4vw,2.6rem)}.s-legal h2{font-size:1.25rem;margin-top:1.8em}.s-legal p{max-width:760px}
 @media (max-width:760px){.s-hero-split{grid-template-columns:1fr}.s-section{padding:48px 0}}
 `;
 }

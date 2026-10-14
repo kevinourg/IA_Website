@@ -38,3 +38,39 @@ describe("SEO", () => {
     );
   });
 });
+
+describe("mentions légales", () => {
+  const legal = {
+    legalName: "Plomberie Martin SARL",
+    legalForm: "SARL" as const,
+    siret: "73282932000074",
+    address: "12 rue de Paris, 93100 Montreuil",
+    shareCapital: "5 000 €",
+    publicationDirector: "Paul Martin",
+  };
+  const hosting = { name: "Hébergeur Test", address: "1 rue X, Paris", phone: "01 00 00 00 00" };
+
+  it("affiche éditeur, SIRET, capital, directeur et hébergeur", () => {
+    const html = renderToStaticMarkup(
+      <SitePage
+        spec={sampleSpec}
+        slug="mentions-legales"
+        baseUrl="x"
+        legal={legal}
+        hosting={hosting}
+      />,
+    );
+    expect(html).toContain("Plomberie Martin SARL — SARL, au capital de 5 000 €");
+    expect(html).toContain("732 829 320 00074");
+    expect(html).toContain("Paul Martin");
+    expect(html).toContain("Hébergeur Test");
+    expect(html).toContain("CNIL");
+  });
+
+  it("signale les informations manquantes avant la commande", () => {
+    const html = renderToStaticMarkup(
+      <SitePage spec={sampleSpec} slug="mentions-legales" baseUrl="x" />,
+    );
+    expect(html).toContain("complétées lors de la mise en ligne");
+  });
+});

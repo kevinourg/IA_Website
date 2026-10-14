@@ -14,6 +14,7 @@ import {
   PROJECT_STATUSES,
   type BusinessBrief,
   type ChatMessage,
+  type LegalInfo,
   type SiteSpec,
 } from "@site-ia/core";
 
@@ -40,13 +41,20 @@ export const projects = pgTable(
     slug: text("slug").unique(),
     /** Secret du lien privé de l'espace client. */
     accessToken: text("access_token").notNull().unique(),
+    /** E-mail du client saisi à la commande (en minuscules). */
+    customerEmail: text("customer_email"),
+    /** Informations légales (mentions légales), saisies à la commande. */
+    legal: jsonb("legal").$type<LegalInfo>(),
     conversation: jsonb("conversation").$type<ChatMessage[]>().notNull().default([]),
     brief: jsonb("brief").$type<Partial<BusinessBrief>>().notNull().default({}),
     leadId: uuid("lead_id"), // origine commerciale (phase 2 : acquisition)
     createdAt: createdAt(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("projects_status_idx").on(t.status)],
+  (t) => [
+    index("projects_status_idx").on(t.status),
+    index("projects_customer_email_idx").on(t.customerEmail),
+  ],
 );
 
 /** Historique des versions du site : permet de revenir en arrière après une modification. */

@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { canTransition, missingBriefFields, slugify, SiteSpecSchema } from "./index";
+import {
+  canTransition,
+  isValidSiret,
+  LegalInfoSchema,
+  missingBriefFields,
+  slugify,
+  SiteSpecSchema,
+} from "./index";
 import { sampleSpec } from "./fixtures";
 
 describe("slugify", () => {
@@ -38,5 +45,31 @@ describe("SiteSpecSchema", () => {
     const bad = structuredClone(sampleSpec);
     bad.theme.palette.primary = "red";
     expect(SiteSpecSchema.safeParse(bad).success).toBe(false);
+  });
+});
+
+describe("informations légales", () => {
+  it("valide un SIRET (clé de Luhn)", () => {
+    expect(isValidSiret("732 829 320 00074")).toBe(true);
+    expect(isValidSiret("73282932000075")).toBe(false);
+    expect(isValidSiret("1234")).toBe(false);
+  });
+  it("exige le capital social pour une société, pas pour un EI", () => {
+    const base = {
+      legalName: "Plomberie Martin",
+      siret: "73282932000074",
+      address: "12 rue de Paris, 93100 Montreuil",
+      publicationDirector: "Paul Martin",
+    };
+    expect(LegalInfoSchema.safeParse({ ...base, legalForm: "SARL" }).success).toBe(false);
+    expect(
+      LegalInfoSchema.safeParse({ ...base, legalForm: "SARL", shareCapital: "5 000 €" }).success,
+    ).toBe(true);
+    expect(
+      LegalInfoSchema.safeParse({
+        ...base,
+        legalForm: "Entrepreneur individuel (EI / micro-entreprise)",
+      }).success,
+    ).toBe(true);
   });
 });

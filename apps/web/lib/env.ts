@@ -12,6 +12,9 @@ const EnvSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   STRIPE_PRICE_CREATION: z.string().optional(),
   STRIPE_PRICE_HOSTING: z.string().optional(),
+  /** E-mails : sans clé, ils s'affichent sur /dev/emails au lieu d'être envoyés. */
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().default("SiteIA <onboarding@resend.dev>"),
   ROOT_DOMAIN: z.string().default("localhost:3000"),
   NEXT_PUBLIC_APP_URL: z.string().default("http://localhost:3000"),
   /** Nombre max de générations complètes par projet (protège le budget IA). */

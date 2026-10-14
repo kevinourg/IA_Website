@@ -18,6 +18,8 @@ export class MemoryRepository implements Repository {
       brief: {},
       customerId: null,
       accessToken: newAccessToken(),
+      customerEmail: null,
+      legal: null,
     };
     this.projects.set(p.id, p);
     return structuredClone(p);
@@ -33,6 +35,13 @@ export class MemoryRepository implements Repository {
       if (p.accessToken === token) return structuredClone(p);
     }
     return null;
+  }
+
+  async findProjectsByEmail(email: string) {
+    const wanted = email.trim().toLowerCase();
+    return [...this.projects.values()]
+      .filter((p) => p.customerEmail?.toLowerCase() === wanted)
+      .map((p) => structuredClone(p));
   }
 
   async updateProject(id: string, patch: Partial<ProjectRecord>) {
