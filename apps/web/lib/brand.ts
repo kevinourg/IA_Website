@@ -5,6 +5,8 @@ export const BRAND = {
   name: "SiteIA",
   tagline: "Votre site professionnel, conçu par IA, en ligne aujourd'hui.",
   supportEmail: "contact@exemple.fr",
+  /** Signature des messages de prospection. */
+  outreachSender: "L'équipe",
 };
 
 /**

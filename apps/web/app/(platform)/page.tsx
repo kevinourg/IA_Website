@@ -130,6 +130,10 @@ export default function Home() {
 
       <footer className="mx-auto max-w-6xl px-5 py-10 text-sm text-ink/60">
         © {new Date().getFullYear()} {BRAND.name} · {BRAND.supportEmail} ·{" "}
+        <Link href="/site-internet" className="underline">
+          Sites par métier
+        </Link>{" "}
+        ·{" "}
         <Link href="/espace/retrouver" className="underline">
           Déjà client ? Retrouver mon espace
         </Link>

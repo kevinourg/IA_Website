@@ -13,6 +13,8 @@ import {
 } from "drizzle-orm/pg-core";
 import {
   PROJECT_STATUSES,
+  type Attribution,
+  type LeadStatus,
   type BusinessBrief,
   type ChatMessage,
   type LegalInfo,
@@ -49,7 +51,10 @@ export const projects = pgTable(
     legal: jsonb("legal").$type<LegalInfo>(),
     conversation: jsonb("conversation").$type<ChatMessage[]>().notNull().default([]),
     brief: jsonb("brief").$type<Partial<BusinessBrief>>().notNull().default({}),
-    leadId: uuid("lead_id"), // origine commerciale (phase 2 : acquisition)
+    /** Prospect à l'origine du projet (aperçu à froid), le cas échéant. */
+    leadId: uuid("lead_id"),
+    /** D'où vient le client (utm, parrain, page d'arrivée). */
+    attribution: jsonb("attribution").$type<Attribution>(),
     createdAt: createdAt(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -124,7 +129,10 @@ export const contactSubmissions = pgTable("contact_submissions", {
   createdAt: createdAt(),
 });
 
-/** Phase 2 — prospects (acquisition de leads). Schéma posé dès maintenant pour l'attribution. */
+/**
+ * Phase 2 — prospects (acquisition). Données strictement professionnelles.
+ * Un prospect « opted_out » ne doit plus jamais être contacté, ni réimporté.
+ */
 export const leads = pgTable(
   "leads",
   {
@@ -135,15 +143,21 @@ export const leads = pgTable(
     phone: text("phone"),
     email: text("email"),
     website: text("website"),
-    source: text("source").notNull(), // ex. "annuaire", "ads", "parrainage", "landing:plombier-paris"
-    status: text("status", {
-      enum: ["new", "contacted", "preview_sent", "converted", "lost", "opted_out"],
-    })
-      .notNull()
-      .default("new"),
-    consent: boolean("consent").notNull().default(false), // RGPD : base légale de la prospection
+    siret: text("siret"),
+    address: text("address"),
+    /** Origine : « annuaire-entreprises », « manuel », « salon », « partenaire:… »… */
+    source: text("source").notNull(),
+    status: text("status").$type<LeadStatus>().notNull().default("new"),
     notes: text("notes"),
+    /** Clé de dédoublonnage (SIRET, e-mail, téléphone ou nom + ville). */
+    dedupKey: text("dedup_key").notNull().unique(),
+    /** Jeton du lien de désinscription inclus dans chaque message. */
+    optOutToken: text("opt_out_token").notNull().unique(),
+    /** Aperçu généré pour ce prospect. */
+    projectId: uuid("project_id"),
+    lastContactedAt: timestamp("last_contacted_at", { withTimezone: true }),
     createdAt: createdAt(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("leads_status_idx").on(t.status)],
 );

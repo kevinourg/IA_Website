@@ -1,9 +1,24 @@
 import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import type { SiteSpec, StatKind, StatRow } from "@site-ia/core";
+import {
+  leadDedupKey,
+  type Attribution,
+  type LeadInput,
+  type LeadStatus,
+  type SiteSpec,
+  type StatKind,
+  type StatRow,
+} from "@site-ia/core";
 import * as schema from "./schema";
-import type { ProjectRecord, Repository, SiteVersionSource, UsageRecord } from "./repository";
+import type {
+  LeadPatch,
+  LeadRecord,
+  ProjectRecord,
+  Repository,
+  SiteVersionSource,
+  UsageRecord,
+} from "./repository";
 import { newAccessToken } from "./token";
 
 type Db = PostgresJsDatabase<typeof schema>;
@@ -23,16 +38,45 @@ function toRecord(row: typeof schema.projects.$inferSelect): ProjectRecord {
     accessToken: row.accessToken,
     customerEmail: row.customerEmail,
     legal: row.legal,
+    attribution: row.attribution,
+    leadId: row.leadId,
+    createdAt: row.createdAt,
+  };
+}
+
+function toLead(row: typeof schema.leads.$inferSelect): LeadRecord {
+  const opt = <T>(v: T | null) => v ?? undefined;
+  return {
+    id: row.id,
+    businessName: row.businessName,
+    trade: opt(row.trade),
+    city: opt(row.city),
+    phone: opt(row.phone),
+    email: opt(row.email),
+    website: opt(row.website),
+    siret: opt(row.siret),
+    address: opt(row.address),
+    source: row.source,
+    notes: opt(row.notes),
+    status: row.status,
+    optOutToken: row.optOutToken,
+    projectId: row.projectId,
+    lastContactedAt: row.lastContactedAt,
+    createdAt: row.createdAt,
   };
 }
 
 export class PostgresRepository implements Repository {
   constructor(private db: Db) {}
 
-  async createProject() {
+  async createProject(opts: { attribution?: Attribution; leadId?: string } = {}) {
     const [row] = await this.db
       .insert(schema.projects)
-      .values({ accessToken: newAccessToken() })
+      .values({
+        accessToken: newAccessToken(),
+        attribution: opts.attribution,
+        leadId: opts.leadId,
+      })
       .returning();
     return toRecord(row!);
   }
@@ -153,5 +197,53 @@ export class PostgresRepository implements Repository {
       .from(t)
       .where(and(eq(t.projectId, projectId), gte(t.day, fromDay)));
     return rows;
+  }
+
+  async listProjects() {
+    const rows = await this.db.query.projects.findMany({
+      orderBy: desc(schema.projects.createdAt),
+    });
+    return rows.map(toRecord);
+  }
+
+  async createLeads(inputs: LeadInput[]) {
+    if (inputs.length === 0) return { created: 0, skipped: 0 };
+    // Les doublons (et donc les désinscrits, qui restent en base) sont ignorés par la clé unique.
+    const rows = await this.db
+      .insert(schema.leads)
+      .values(
+        inputs.map((i) => ({ ...i, dedupKey: leadDedupKey(i), optOutToken: newAccessToken() })),
+      )
+      .onConflictDoNothing({ target: schema.leads.dedupKey })
+      .returning({ id: schema.leads.id });
+    return { created: rows.length, skipped: inputs.length - rows.length };
+  }
+
+  async listLeads(filter: { status?: LeadStatus } = {}) {
+    const rows = await this.db.query.leads.findMany({
+      where: filter.status ? eq(schema.leads.status, filter.status) : undefined,
+      orderBy: desc(schema.leads.createdAt),
+      limit: 500,
+    });
+    return rows.map(toLead);
+  }
+
+  async getLead(id: string) {
+    const row = await this.db.query.leads.findFirst({ where: eq(schema.leads.id, id) });
+    return row ? toLead(row) : null;
+  }
+
+  async updateLead(id: string, patch: LeadPatch) {
+    await this.db
+      .update(schema.leads)
+      .set({ ...patch, updatedAt: new Date() })
+      .where(eq(schema.leads.id, id));
+  }
+
+  async findLeadByOptOutToken(token: string) {
+    const row = await this.db.query.leads.findFirst({
+      where: eq(schema.leads.optOutToken, token),
+    });
+    return row ? toLead(row) : null;
   }
 }

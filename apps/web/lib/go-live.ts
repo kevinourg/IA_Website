@@ -15,6 +15,8 @@ export async function goLive(project: ProjectRecord): Promise<void> {
   await repo().updateProject(project.id, { status: "paid" });
   // TODO (provisioning) : réserver le domaine .fr et vérifier le DNS avant de passer en "live".
   await repo().updateProject(project.id, { status: "live" });
+  // Prospect devenu client : on le sort du pipeline de prospection.
+  if (project.leadId) await repo().updateLead(project.leadId, { status: "converted" });
 
   if (project.customerEmail && project.slug) {
     await sendEmail(

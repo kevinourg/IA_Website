@@ -36,6 +36,12 @@ export default async function PreviewPage({ params }: { params: Params }) {
       >
         <span>
           Aperçu de votre site — <strong>{spec.business.name}</strong>
+          {project.leadId && (
+            <span style={{ display: "block", fontSize: 13, opacity: 0.8 }}>
+              Préparé gratuitement à partir d&apos;informations publiques : textes, prestations et
+              photos s&apos;ajustent avant toute mise en ligne.
+            </span>
+          )}
         </span>
         {project.status === "preview" && (
           <a

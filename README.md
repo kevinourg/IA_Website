@@ -50,6 +50,13 @@ renseigne `CLAUDE_CLI_PATH` avec le chemin complet de `claude.exe`.
 4. Les e-mails (site en ligne, nouvelle demande, lien perdu) s'affichent sur
    `http://localhost:3000/dev/emails` tant que `RESEND_API_KEY` n'est pas défini.
 
+### Acquisition (phase 2)
+
+- Pages métier × ville : `http://localhost:3000/site-internet`
+- Back-office (prospects, entonnoir par canal) : `http://localhost:3000/admin`
+  — ouvert en local, protégé par `ADMIN_PASSWORD` sinon.
+- Règles de prospection : [docs/PROSPECTION.md](docs/PROSPECTION.md)
+
 ### Avec Postgres
 
 ```bash
@@ -83,3 +90,4 @@ docs/               Architecture, benchmark concurrents, feuille de route
 - [Architecture](docs/ARCHITECTURE.md) — comment un site est généré, servi et facturé
 - [Benchmark](docs/BENCHMARK.md) — En2Deux, Sitenow, ce qu'on reprend et où on se différencie
 - [Feuille de route](docs/ROADMAP.md) — phase 1 (app) et phase 2 (acquisition de leads)
+- [Prospection](docs/PROSPECTION.md) — règles françaises (RGPD, B2B) et fonctionnement de l'outil

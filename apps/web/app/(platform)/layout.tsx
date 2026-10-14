@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AttributionCapture } from "@/components/attribution";
 import { BRAND } from "@/lib/brand";
 import "./globals.css";
 
@@ -17,7 +18,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;800&family=Inter:wght@400;500;600&display=swap"
         />
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <AttributionCapture />
+        {children}
+      </body>
     </html>
   );
 }

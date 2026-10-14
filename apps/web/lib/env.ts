@@ -17,6 +17,8 @@ const EnvSchema = z.object({
   EMAIL_FROM: z.string().default("SiteIA <onboarding@resend.dev>"),
   /** Secret des tâches planifiées (rapport mensuel) : en-tête Authorization: Bearer <secret>. */
   CRON_SECRET: z.string().optional(),
+  /** Mot de passe du back-office /admin (authentification HTTP Basic). */
+  ADMIN_PASSWORD: z.string().optional(),
   ROOT_DOMAIN: z.string().default("localhost:3000"),
   NEXT_PUBLIC_APP_URL: z.string().default("http://localhost:3000"),
   /** Nombre max de générations complètes par projet (protège le budget IA). */

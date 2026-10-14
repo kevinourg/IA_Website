@@ -1,6 +1,21 @@
 import { randomUUID } from "node:crypto";
-import type { SiteSpec, StatKind, StatRow } from "@site-ia/core";
-import type { ContactSubmission, ProjectRecord, Repository, SiteVersionSource } from "./repository";
+import {
+  leadDedupKey,
+  type Attribution,
+  type LeadInput,
+  type LeadStatus,
+  type SiteSpec,
+  type StatKind,
+  type StatRow,
+} from "@site-ia/core";
+import type {
+  ContactSubmission,
+  LeadPatch,
+  LeadRecord,
+  ProjectRecord,
+  Repository,
+  SiteVersionSource,
+} from "./repository";
 import { newAccessToken } from "./token";
 
 /** Stockage en mémoire — développement sans base de données et tests. */
@@ -8,10 +23,11 @@ export class MemoryRepository implements Repository {
   private projects = new Map<string, ProjectRecord>();
   private versions = new Map<string, SiteSpec[]>();
   private submissions = new Map<string, ContactSubmission[]>();
+  private leads = new Map<string, LeadRecord & { dedupKey: string }>();
   /** projectId → "jour|type|clé" → nombre */
   private stats = new Map<string, Map<string, number>>();
 
-  async createProject() {
+  async createProject(opts: { attribution?: Attribution; leadId?: string } = {}) {
     const p: ProjectRecord = {
       id: randomUUID(),
       status: "intake",
@@ -22,6 +38,9 @@ export class MemoryRepository implements Repository {
       accessToken: newAccessToken(),
       customerEmail: null,
       legal: null,
+      attribution: opts.attribution ?? null,
+      leadId: opts.leadId ?? null,
+      createdAt: new Date(),
     };
     this.projects.set(p.id, p);
     return structuredClone(p);
@@ -122,5 +141,57 @@ export class MemoryRepository implements Repository {
         rows.push({ day: day!, kind: kind as StatKind, key: key.join("|"), count });
     }
     return rows;
+  }
+
+  async listProjects() {
+    return [...this.projects.values()].map((p) => structuredClone(p));
+  }
+
+  async createLeads(inputs: LeadInput[]) {
+    const keys = new Set([...this.leads.values()].map((l) => l.dedupKey));
+    let created = 0;
+    for (const input of inputs) {
+      const dedupKey = leadDedupKey(input);
+      if (keys.has(dedupKey)) continue;
+      keys.add(dedupKey);
+      const lead = {
+        ...input,
+        id: randomUUID(),
+        status: "new" as LeadStatus,
+        optOutToken: newAccessToken(),
+        projectId: null,
+        lastContactedAt: null,
+        createdAt: new Date(),
+        dedupKey,
+      };
+      this.leads.set(lead.id, lead);
+      created++;
+    }
+    return { created, skipped: inputs.length - created };
+  }
+
+  async listLeads(filter: { status?: LeadStatus } = {}) {
+    return [...this.leads.values()]
+      .filter((l) => !filter.status || l.status === filter.status)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .map(({ dedupKey: _k, ...l }) => structuredClone(l));
+  }
+
+  async getLead(id: string) {
+    const l = this.leads.get(id);
+    if (!l) return null;
+    const { dedupKey: _k, ...lead } = l;
+    return structuredClone(lead);
+  }
+
+  async updateLead(id: string, patch: LeadPatch) {
+    const l = this.leads.get(id);
+    if (!l) throw new Error(`Prospect introuvable : ${id}`);
+    this.leads.set(id, { ...l, ...structuredClone(patch) });
+  }
+
+  async findLeadByOptOutToken(token: string) {
+    for (const l of this.leads.values()) if (l.optOutToken === token) return this.getLead(l.id);
+    return null;
   }
 }

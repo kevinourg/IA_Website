@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ChatMessage } from "@site-ia/core";
+import { readAttribution } from "@/components/attribution";
 
 const WELCOME: ChatMessage = {
   role: "assistant",
@@ -29,7 +30,11 @@ export function IntakeChat({ initialMessage }: { initialMessage?: string }) {
 
   async function ensureProject(): Promise<string> {
     if (projectId) return projectId;
-    const res = await fetch("/api/projects", { method: "POST" });
+    const res = await fetch("/api/projects", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ attribution: readAttribution() }),
+    });
     if (!res.ok) throw new Error("Impossible de démarrer le projet");
     const { id } = (await res.json()) as { id: string };
     setProjectId(id);

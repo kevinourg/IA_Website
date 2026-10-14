@@ -46,12 +46,27 @@ _Retirés : l'ancienne étape 3 (affichage du site pendant sa construction) ; l'
 
 ## Phase 2 — Acquisition de leads
 
-Préparé dès maintenant : table `leads` + `projects.leadId` pour mesurer le coût d'acquisition par canal.
+Règles de prospection et fonctionnement de l'outil : [PROSPECTION.md](PROSPECTION.md).
 
-- [ ] **SEO programmatique** : pages « site internet pour <métier> à <ville> » générées par le même moteur
-- [ ] **Aperçu à froid** : générer l'aperçu du site d'un prospect sans site et le lui envoyer —
-      conversion forte, mais **cadre RGPD/LCEN strict** pour la prospection B2B
-      (intérêt légitime, information, opposition facile)
-- [ ] **Publicité locale** (Google Ads / Meta) par métier, avec landing dédiée
-- [ ] **Partenariats** : comptables, CMA/CCI, réseaux d'artisans, parrainage client
-- [ ] **Relances** des aperçus non payés (e-mail J+1, J+3)
+### Socle
+
+- [x] **Attribution** : provenance de chaque client (utm, parrain, page d'arrivée) sans cookie ;
+      entonnoir démarrés → aperçus → commandés par canal dans `/admin`
+- [x] **Pages métier × ville** : 15 métiers × 20 villes (`/site-internet/…`), contenu propre à
+      chaque métier, FAQ, schema.org, plan du site, maillage interne, chat prérempli
+- [x] **Back-office prospects** (`/admin`, protégé par mot de passe) : ajout, liste collée depuis
+      un tableur, import depuis l'annuaire officiel des entreprises, statuts, notes
+- [x] **Aperçu à froid** : génération du site d'un prospect + message prêt à envoyer (e-mail /
+      SMS) avec origine des données et lien de désinscription
+- [x] **Désinscription** : lien unique, prospect verrouillé et jamais réimporté
+- [x] Prospect passé automatiquement en « Client » quand il commande
+
+### À venir
+
+- [ ] Définir `ADMIN_PASSWORD` et vérifier l'indexation des pages métier dans Google Search
+      Console — au déploiement (étape 11)
+- [ ] **Publicité locale** (Google Ads / Meta) vers les pages métier × ville, avec utm
+- [ ] **Partenariats** : comptables, CMA/CCI, réseaux d'artisans — liens `?ref=` + suivi
+- [ ] **Relances** des aperçus non commandés (avec consentement explicite à la relance)
+- [ ] Purge automatique des prospects sans contact depuis 3 ans
+- [ ] Enrichir le catalogue métiers / villes selon les résultats (qualité avant volume)

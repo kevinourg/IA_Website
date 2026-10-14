@@ -36,4 +36,14 @@ describe("MemoryRepository", () => {
     expect(rows).toContainEqual({ day: "2026-10-14", kind: "pageview", key: "/", count: 2 });
     expect(await repo.getStats(p.id, "2026-10-15")).toEqual([]);
   });
+
+  it("dédoublonne les prospects et ne réimporte jamais un désinscrit", async () => {
+    const repo = new MemoryRepository();
+    const lead = { businessName: "Plomberie Martin", siret: "12345678900011", source: "test" };
+    expect(await repo.createLeads([lead, lead])).toEqual({ created: 1, skipped: 1 });
+    const [created] = await repo.listLeads();
+    await repo.updateLead(created!.id, { status: "opted_out" });
+    expect(await repo.createLeads([lead])).toEqual({ created: 0, skipped: 1 });
+    expect((await repo.findLeadByOptOutToken(created!.optOutToken))?.status).toBe("opted_out");
+  });
 });

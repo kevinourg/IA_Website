@@ -1,4 +1,7 @@
 import type {
+  Attribution,
+  LeadInput,
+  LeadStatus,
   BusinessBrief,
   ChatMessage,
   LegalInfo,
@@ -21,7 +24,25 @@ export type ProjectRecord = {
   customerEmail: string | null;
   /** Informations légales pour les mentions légales, saisies à la commande. */
   legal: LegalInfo | null;
+  /** D'où vient le client (utm, parrain, page d'arrivée). */
+  attribution: Attribution | null;
+  /** Prospect à l'origine du projet (aperçu à froid). */
+  leadId: string | null;
+  createdAt: Date;
 };
+
+export type LeadRecord = LeadInput & {
+  id: string;
+  status: LeadStatus;
+  optOutToken: string;
+  projectId: string | null;
+  lastContactedAt: Date | null;
+  createdAt: Date;
+};
+
+export type LeadPatch = Partial<
+  Pick<LeadRecord, "status" | "notes" | "projectId" | "lastContactedAt" | "phone" | "email">
+>;
 
 export type UsageRecord = {
   projectId?: string;
@@ -44,7 +65,9 @@ export type ContactSubmission = {
 
 /** Accès aux données utilisé par l'app. Deux implémentations : Postgres et mémoire. */
 export interface Repository {
-  createProject(): Promise<ProjectRecord>;
+  createProject(opts?: { attribution?: Attribution; leadId?: string }): Promise<ProjectRecord>;
+  /** Tous les projets (tableau de bord : entonnoir par canal). */
+  listProjects(): Promise<ProjectRecord[]>;
   getProject(id: string): Promise<ProjectRecord | null>;
   findProjectByToken(token: string): Promise<ProjectRecord | null>;
   /** Projets commandés avec cet e-mail (pour renvoyer les liens d'accès). */
@@ -79,4 +102,12 @@ export interface Repository {
   ): Promise<void>;
   /** Compteurs depuis `fromDay` inclus (AAAA-MM-JJ). */
   getStats(projectId: string, fromDay: string): Promise<StatRow[]>;
+
+  // ─── Prospects (phase 2) ───
+  /** Ajoute des prospects ; ignore les doublons et les personnes désinscrites. */
+  createLeads(inputs: LeadInput[]): Promise<{ created: number; skipped: number }>;
+  listLeads(filter?: { status?: LeadStatus }): Promise<LeadRecord[]>;
+  getLead(id: string): Promise<LeadRecord | null>;
+  updateLead(id: string, patch: LeadPatch): Promise<void>;
+  findLeadByOptOutToken(token: string): Promise<LeadRecord | null>;
 }
