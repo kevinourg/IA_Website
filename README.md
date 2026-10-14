@@ -32,8 +32,9 @@ pnpm dev           # http://localhost:3000
 Pour du **développement local uniquement** (interdit en production par les conditions d'Anthropic) :
 
 1. Installe [Claude Code](https://code.claude.com) et connecte-toi : lance `claude`, puis `/login` avec ton compte Claude.
-2. Dans `apps/web/.env.local`, ajoute `AI_PROVIDER=claude-cli`.
-3. Relance `pnpm dev` : `/api/health` doit afficher `"ai":"claude-cli"`.
+2. C'est tout : `apps/web/.env.development` active déjà ce mode avec `pnpm dev`
+   (`/api/health` affiche `"ai":"claude-cli"`). Pour revenir aux réponses simulées,
+   mets `AI_PROVIDER=mock` dans `apps/web/.env.local`.
 
 Les appels consomment le quota de ton abonnement. Sous Windows, si `claude` est introuvable,
 renseigne `CLAUDE_CLI_PATH` avec le chemin complet de `claude.exe`.
